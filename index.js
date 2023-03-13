@@ -20,7 +20,7 @@ require("dotenv").config()
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.3e6mwvl.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-
+//JWtToken implement 
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization
     console.log(authHeader);
@@ -45,7 +45,7 @@ async function run() {
 
 
 
-
+        //product added
         app.post('/item', async (req, res) => {
             const product = req.body
             const result = await ProductsCollection.insertOne(product)
@@ -58,7 +58,7 @@ async function run() {
             const search = req.query.search
             console.log(search);
             let query = {};
-            if (search.length) {
+            if (search.length > 0) {
                 query = {
                     $text: {
                         $search: search
@@ -72,6 +72,20 @@ async function run() {
             res.send({ count, products });
         });
 
+
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
+                return res.send({ accessToken: token })
+            }
+            console.log(user)
+            res.status(403).send({ 'aisos taile': 'churi korar eto danda k vai' })
+        })
+
+        //product delete
         app.delete("/products/:id", async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
